@@ -1,5 +1,6 @@
 "use client";
 
+import CalendarService from "@/api/calendar";
 import { useState } from "react";
 
 type DaysOfWeek = {
@@ -44,7 +45,8 @@ const cantons: Canton[] = [
 ];
 
 const Home = () => {
-  const [selectedCanton, setSelectedCanton] = useState<string>("");
+  const CURRENT_YEAR = 2025;
+  const MAX_YEAR = 2030;
   const [selectedDays, setSelectedDays] = useState<DaysOfWeek>({
     Monday: false,
     Tuesday: false,
@@ -52,12 +54,11 @@ const Home = () => {
     Thursday: false,
     Friday: false,
   });
+  const [selectedCanton, setSelectedCanton] = useState<string>("");
+
   const [inputValue, setInputValue] = useState<string>("");
   const [year, setYear] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  const currentYear = 2025;
-  const maxYear = 2050;
 
   const validateYear = (value: string) => {
     setError(null);
@@ -71,13 +72,13 @@ const Home = () => {
       setYear(null);
       return;
     }
-    if (parsedYear < currentYear) {
-      setError(`Year must be at least ${currentYear}`);
+    if (parsedYear < CURRENT_YEAR) {
+      setError(`Year must be at least ${CURRENT_YEAR}`);
       setYear(null);
       return;
     }
-    if (parsedYear > maxYear) {
-      setError(`Year must not exceed ${maxYear}`);
+    if (parsedYear > MAX_YEAR) {
+      setError(`Year must not exceed ${MAX_YEAR}`);
       setYear(null);
       return;
     }
@@ -97,6 +98,14 @@ const Home = () => {
       ...prevState,
       [day]: !prevState[day],
     }));
+  };
+
+  const handleSubmit = async () => {
+    if (year !== null) {
+        console.log(typeof year);
+      const holidays = await CalendarService.getCalendar(year);
+      console.log(holidays);
+    }
   };
 
   return (
@@ -143,7 +152,7 @@ const Home = () => {
             htmlFor="year-input"
             className="text-xl font-bold text-gray-700"
           >
-            Enter a year ({currentYear}-{maxYear})
+            Enter a year ({CURRENT_YEAR}-{MAX_YEAR})
           </label>
 
           <input
@@ -156,7 +165,7 @@ const Home = () => {
                 ? "border-red-500 focus:ring-red-500"
                 : "border-gray-300 focus:ring-blue-500"
             }`}
-            placeholder={`${currentYear} to ${maxYear}`}
+            placeholder={`${CURRENT_YEAR} to ${MAX_YEAR}`}
             maxLength={4}
           />
 
@@ -166,13 +175,18 @@ const Home = () => {
             <p className="text-sm text-green-600">Valid year: {year}</p>
           )}
         </div>
-        {/* <button
-          onClick={handleSubmit}
-          className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75"
-        >
-          Check Selected Days
-        </button> */}
       </div>
+      <button
+        onClick={handleSubmit}
+        className={`py-2 px-4 font-semibold rounded-lg self-center ${
+            year === null 
+            ? "bg-green-300 text-gray-500 cursor-not-allowed opacity-75" 
+            : "bg-green-600 hover:bg-green-700 text-white"
+        }`}
+        disabled={year === null}
+      >
+        Get holidays calendar
+      </button>
     </>
   );
 };
