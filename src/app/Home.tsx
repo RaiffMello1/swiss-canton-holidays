@@ -1,7 +1,7 @@
 "use client";
 
 import CalendarService from "@/api/calendar";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DaysOfWeek, Holiday } from "./types";
 import { cantons, monthNames } from "./const";
 import { getDayOfWeek, getDayOfMonth } from "./utils";
@@ -24,9 +24,8 @@ const Home = () => {
   const [error, setError] = useState<string | null>("");
 
   const [allHolidays, setAllHolidays] = useState<Holiday[] | null>(null);
-  const [allCantonHolidays, setAllCantonHolidays] = useState<Holiday[]>([]);
 
-  useEffect(() => {
+  const allCHollidays = useMemo(() => {
     if (allHolidays) {
       const nationalHolidays = allHolidays.filter(
         (holiday) => holiday.nationwide
@@ -59,9 +58,9 @@ const Home = () => {
           );
         }
       );
-      setAllCantonHolidays(ascendingItems);
+      return ascendingItems
     }
-  }, [allHolidays, selectedCanton]);
+  }, [allHolidays, selectedCanton])
 
   useEffect(() => {
     for (const [key, value] of Object.entries(selectedDays)) {
@@ -206,8 +205,9 @@ const Home = () => {
         Get holidays calendar
       </button>
       <>
-        {allCantonHolidays.length > 0 && (
+        {allCHollidays && allCHollidays.length > 0 && (
           <div className="self-center">
+            <h2 className="flex justify-center mb-2 text-2xl">{cantons.find( canton => canton.id === selectedCanton)?.name}</h2>
             <table className="bg-white border border-gray-200 shadow-md rounded-lg md:text-lg">
               <thead>
                 <tr className="bg-gray-100">
@@ -224,7 +224,7 @@ const Home = () => {
                 </tr>
               </thead>
               <tbody>
-                {allCantonHolidays.map((holiday, index) => (
+                {allCHollidays  && allCHollidays.map((holiday, index) => (
                   <tr
                     key={index}
                     className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
