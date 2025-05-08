@@ -65,17 +65,19 @@ const Home = () => {
           );
         }
       );
-      return ascendingItems
+      return ascendingItems;
     }
-  }, [allHolidays, selectedCanton])
+  }, [allHolidays, selectedCanton]);
 
   // We use this use effect to add or remove a work day on the list
   useEffect(() => {
     for (const [key, value] of Object.entries(selectedDays)) {
       if (value && !workDays.includes(key)) {
-        setWorkDays(prevWorkDays => [...prevWorkDays, key]);
+        setWorkDays((prevWorkDays) => [...prevWorkDays, key]);
       } else if (!value && workDays.includes(key)) {
-        setWorkDays(prevWorkDays => prevWorkDays.filter(item => item !== key));
+        setWorkDays((prevWorkDays) =>
+          prevWorkDays.filter((item) => item !== key)
+        );
       }
     }
   }, [selectedDays]);
@@ -122,18 +124,26 @@ const Home = () => {
 
   const handleSubmit = async () => {
     if (year !== null) {
-      HolidaysService.getHolidays(year).then(res => {
-        if (res) setAllHolidays(res);
-      }).catch(err => console.log(err));
+      HolidaysService.getHolidays(year)
+        .then((res) => {
+          if (res) setAllHolidays(res);
+        })
+        .catch((err) => console.log(err));
     }
   };
 
   return (
     <>
-      <div className="flex flex-col md:flex-row gap-4 md:gap-16 w-full item-center justify-center">
+      <div
+        data-testid="home-component"
+        className="flex flex-col md:flex-row gap-4 md:gap-16 w-full item-center justify-center"
+      >
         <div className="mb-8">
           {/* Select a Canton */}
-          <label className="block text-gray-700 mb-2 text-xl font-bold ">
+          <label
+            data-testid="select-label"
+            className="block text-gray-700 mb-2 text-xl font-bold "
+          >
             Select a Canton:
           </label>
           <select
@@ -219,7 +229,9 @@ const Home = () => {
       <>
         {allCantonHollidays && allCantonHollidays.length > 0 && (
           <div className="self-center">
-            <h2 className="flex justify-center mb-2 text-2xl">{cantons.find( canton => canton.id === selectedCanton)?.name}</h2>
+            <h2 className="flex justify-center mb-2 text-2xl">
+              {cantons.find((canton) => canton.id === selectedCanton)?.name}
+            </h2>
             <table className="bg-white border border-gray-200 shadow-md rounded-lg md:text-lg">
               <thead>
                 <tr className="bg-gray-100">
@@ -236,33 +248,34 @@ const Home = () => {
                 </tr>
               </thead>
               <tbody>
-                {allCantonHollidays  && allCantonHollidays.map((holiday, index) => (
-                  <tr
-                    key={index}
-                    className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
-                  >
-                    <td className="py-3 px-1 md:px-4 border-b">
-                      {getDayOfMonth(holiday.startDate)}
-                    </td>
-                    <td className="py-3 px-1 md:px-4 border-b">
-                      {monthNames[Number(holiday.startDate.split("-")[1])]}
-                    </td>
-                    <td className="py-3 px-1 md:px-4 border-b">
-                      {holiday.name[0].text}
-                    </td>
-
-                    <td
-                      className={`py-3 px-1 md:px-4 border-b ${
-                        // We higlith when the holiday its the same day of a work day
-                        workDays.includes(getDayOfWeek(holiday.startDate))
-                          ? "font-bold text-orange-400 border-t"
-                          : ""
-                      }`}
+                {allCantonHollidays &&
+                  allCantonHollidays.map((holiday, index) => (
+                    <tr
+                      key={index}
+                      className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
                     >
-                      {getDayOfWeek(holiday.startDate)}
-                    </td>
-                  </tr>
-                ))}
+                      <td className="py-3 px-1 md:px-4 border-b">
+                        {getDayOfMonth(holiday.startDate)}
+                      </td>
+                      <td className="py-3 px-1 md:px-4 border-b">
+                        {monthNames[Number(holiday.startDate.split("-")[1])]}
+                      </td>
+                      <td className="py-3 px-1 md:px-4 border-b">
+                        {holiday.name[0].text}
+                      </td>
+
+                      <td
+                        className={`py-3 px-1 md:px-4 border-b ${
+                          // We higlith when the holiday its the same day of a work day
+                          workDays.includes(getDayOfWeek(holiday.startDate))
+                            ? "font-bold text-orange-400 border-t"
+                            : ""
+                        }`}
+                      >
+                        {getDayOfWeek(holiday.startDate)}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
