@@ -1,16 +1,16 @@
 import { Holiday } from "@/app/types";
 import apiService from "./apiService";
 
-const CALENDAR_ENDPOINT =
+const HOLIDAYS_ENDPOINT =
   "https://openholidaysapi.org/PublicHolidays?countryIsoCode=CH&languageIsoCode=DE&";
 
-const CalendarService = {
+const HolidaysService = {
   // Get the holidays
-  getCalendar(year: number): Promise<Holiday[]> {
+  getHolidays(year: number): Promise<Holiday[]> {
     return apiService.get(
-      `${CALENDAR_ENDPOINT}validFrom=${year}-01-01&validTo=${year}-12-31`
+      `${HOLIDAYS_ENDPOINT}validFrom=${year}-01-01&validTo=${year}-12-31`
     );
   },
 };
 
-export default CalendarService;
+export default HolidaysService;

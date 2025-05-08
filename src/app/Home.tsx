@@ -1,6 +1,6 @@
 "use client";
 
-import CalendarService from "@/api/calendar";
+import HolidaysService from "@/api/holidays";
 import { useEffect, useMemo, useState } from "react";
 import { DaysOfWeek, Holiday } from "./types";
 import { cantons, monthNames } from "./const";
@@ -9,6 +9,7 @@ import { getDayOfWeek, getDayOfMonth } from "./utils";
 const Home = () => {
   const CURRENT_YEAR = 2025;
   const MAX_YEAR = 2030;
+
   const [selectedDays, setSelectedDays] = useState<DaysOfWeek>({
     Monday: false,
     Tuesday: false,
@@ -25,28 +26,34 @@ const Home = () => {
 
   const [allHolidays, setAllHolidays] = useState<Holiday[] | null>(null);
 
-  const allCHollidays = useMemo(() => {
+  // Find the holidays of an specific canton
+  const allCantonHollidays = useMemo(() => {
     if (allHolidays) {
+      // Get national holidays
       const nationalHolidays = allHolidays.filter(
         (holiday) => holiday.nationwide
       );
+
+      // Separate thesubdivisions holidays
       const subDivisionHolidays = allHolidays.filter(
         (holiday) => holiday.subdivisions && holiday.subdivisions.length
       );
 
-      //finding canton holyday
+      // Finding canton holyday
       const cantonHolidays = subDivisionHolidays.filter((holiday) => {
         let acronymCantonFound;
 
         holiday.subdivisions.forEach((element) => {
           const shortNameList = element.shortName.split("-");
           for (let index = 0; index < shortNameList.length; index++) {
+            // This is the match that we want, the canton selected equals the acronym defined in the subdivision
             if (shortNameList[index] === selectedCanton) {
               acronymCantonFound = shortNameList[index];
               break;
             }
           }
         });
+        // We filter the holiday
         return acronymCantonFound === selectedCanton;
       });
 
@@ -62,6 +69,7 @@ const Home = () => {
     }
   }, [allHolidays, selectedCanton])
 
+  // We use this use effect to add or remove a work day on the list
   useEffect(() => {
     for (const [key, value] of Object.entries(selectedDays)) {
       if (value && !workDays.includes(key)) {
@@ -114,8 +122,9 @@ const Home = () => {
 
   const handleSubmit = async () => {
     if (year !== null) {
-      const holidays = await CalendarService.getCalendar(year);
-      if (holidays) setAllHolidays(holidays);
+      HolidaysService.getHolidays(year).then(res => {
+        if (res) setAllHolidays(res);
+      }).catch(err => console.log(err));
     }
   };
 
@@ -123,6 +132,7 @@ const Home = () => {
     <>
       <div className="flex flex-col md:flex-row gap-4 md:gap-16 w-full item-center justify-center">
         <div className="mb-8">
+          {/* Select a Canton */}
           <label className="block text-gray-700 mb-2 text-xl font-bold ">
             Select a Canton:
           </label>
@@ -141,6 +151,7 @@ const Home = () => {
         </div>
 
         <div className="space-y-2">
+          {/* Check the work days */}
           <h3 className="text-xl font-bold mb-4 text-gray-800">Work Days</h3>
           {(Object.keys(selectedDays) as Array<keyof DaysOfWeek>).map((day) => (
             <div key={day} className="flex items-center">
@@ -159,13 +170,13 @@ const Home = () => {
         </div>
 
         <div className="flex flex-col gap-2">
+          {/* Type a year */}
           <label
             htmlFor="year-input"
             className="text-xl font-bold text-gray-700"
           >
             Enter a year ({CURRENT_YEAR}-{MAX_YEAR})
           </label>
-
           <input
             id="year-input"
             type="text"
@@ -197,6 +208,7 @@ const Home = () => {
             : "bg-green-600 hover:bg-green-700 text-white"
         }`}
         disabled={
+          // Only enable the button when the fields has value
           year === null ||
           selectedCanton.length === 0 ||
           Object.values(selectedDays).every((value) => value === false)
@@ -205,7 +217,7 @@ const Home = () => {
         Get holidays calendar
       </button>
       <>
-        {allCHollidays && allCHollidays.length > 0 && (
+        {allCantonHollidays && allCantonHollidays.length > 0 && (
           <div className="self-center">
             <h2 className="flex justify-center mb-2 text-2xl">{cantons.find( canton => canton.id === selectedCanton)?.name}</h2>
             <table className="bg-white border border-gray-200 shadow-md rounded-lg md:text-lg">
@@ -224,7 +236,7 @@ const Home = () => {
                 </tr>
               </thead>
               <tbody>
-                {allCHollidays  && allCHollidays.map((holiday, index) => (
+                {allCantonHollidays  && allCantonHollidays.map((holiday, index) => (
                   <tr
                     key={index}
                     className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
@@ -241,6 +253,7 @@ const Home = () => {
 
                     <td
                       className={`py-3 px-1 md:px-4 border-b ${
+                        // We higlith when the holiday its the same day of a work day
                         workDays.includes(getDayOfWeek(holiday.startDate))
                           ? "font-bold text-orange-400 border-t"
                           : ""
