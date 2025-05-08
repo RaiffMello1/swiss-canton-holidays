@@ -1,48 +1,10 @@
 "use client";
 
 import CalendarService from "@/api/calendar";
-import { useState } from "react";
-
-type DaysOfWeek = {
-  Monday: boolean;
-  Tuesday: boolean;
-  Wednesday: boolean;
-  Thursday: boolean;
-  Friday: boolean;
-};
-
-type Canton = {
-  id: string;
-  name: string;
-};
-const cantons: Canton[] = [
-  { id: "AG", name: "Aargau" },
-  { id: "AI", name: "Appenzell Innerrhoden" },
-  { id: "AR", name: "Appenzell Ausserrhoden" },
-  { id: "BE", name: "Bern" },
-  { id: "BL", name: "Basel-Landschaft" },
-  { id: "BS", name: "Basel-Stadt" },
-  { id: "FR", name: "Fribourg" },
-  { id: "GE", name: "Geneva" },
-  { id: "GL", name: "Glarus" },
-  { id: "GR", name: "Graubünden" },
-  { id: "JU", name: "Jura" },
-  { id: "LU", name: "Lucerne" },
-  { id: "NE", name: "Neuchâtel" },
-  { id: "NW", name: "Nidwalden" },
-  { id: "OW", name: "Obwalden" },
-  { id: "SG", name: "St. Gallen" },
-  { id: "SH", name: "Schaffhausen" },
-  { id: "SO", name: "Solothurn" },
-  { id: "SZ", name: "Schwyz" },
-  { id: "TG", name: "Thurgau" },
-  { id: "TI", name: "Ticino" },
-  { id: "UR", name: "Uri" },
-  { id: "VD", name: "Vaud" },
-  { id: "VS", name: "Valais" },
-  { id: "ZG", name: "Zug" },
-  { id: "ZH", name: "Zurich" },
-];
+import { useEffect, useState } from "react";
+import { DaysOfWeek, Holiday } from "./types";
+import { cantons, monthNames } from "./const";
+import { getDayOfWeek, getDayOfMonth } from "./utils";
 
 const Home = () => {
   const CURRENT_YEAR = 2025;
@@ -54,11 +16,62 @@ const Home = () => {
     Thursday: false,
     Friday: false,
   });
+  const [workDays, setWorkDays] = useState<string[]>([]);
   const [selectedCanton, setSelectedCanton] = useState<string>("");
 
   const [inputValue, setInputValue] = useState<string>("");
   const [year, setYear] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>("");
+
+  const [allHolidays, setAllHolidays] = useState<Holiday[] | null>(null);
+  const [allCantonHolidays, setAllCantonHolidays] = useState<Holiday[]>([]);
+
+  useEffect(() => {
+    if (allHolidays) {
+      const nationalHolidays = allHolidays.filter(
+        (holiday) => holiday.nationwide
+      );
+      const subDivisionHolidays = allHolidays.filter(
+        (holiday) => holiday.subdivisions && holiday.subdivisions.length
+      );
+
+      //finding canton holyday
+      const cantonHolidays = subDivisionHolidays.filter((holiday) => {
+        let acronymCantonFound;
+
+        holiday.subdivisions.forEach((element) => {
+          const shortNameList = element.shortName.split("-");
+          for (let index = 0; index < shortNameList.length; index++) {
+            if (shortNameList[index] === selectedCanton) {
+              acronymCantonFound = shortNameList[index];
+              break;
+            }
+          }
+        });
+        return acronymCantonFound === selectedCanton;
+      });
+
+      //ordering
+      const ascendingItems = [...nationalHolidays, ...cantonHolidays].sort(
+        (a, b) => {
+          return (
+            new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+          );
+        }
+      );
+      setAllCantonHolidays(ascendingItems);
+    }
+  }, [allHolidays, selectedCanton]);
+
+  useEffect(() => {
+    for (const [key, value] of Object.entries(selectedDays)) {
+      if (value && !workDays.includes(key)) {
+        setWorkDays(prevWorkDays => [...prevWorkDays, key]);
+      } else if (!value && workDays.includes(key)) {
+        setWorkDays(prevWorkDays => prevWorkDays.filter(item => item !== key));
+      }
+    }
+  }, [selectedDays]);
 
   const validateYear = (value: string) => {
     setError(null);
@@ -102,9 +115,8 @@ const Home = () => {
 
   const handleSubmit = async () => {
     if (year !== null) {
-        console.log(typeof year);
       const holidays = await CalendarService.getCalendar(year);
-      console.log(holidays);
+      if (holidays) setAllHolidays(holidays);
     }
   };
 
@@ -118,7 +130,7 @@ const Home = () => {
           <select
             value={selectedCanton}
             onChange={(e) => setSelectedCanton(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full md:text-lg p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">-- Select a Canton --</option>
             {cantons.map((canton) => (
@@ -140,7 +152,7 @@ const Home = () => {
                 onChange={() => handleDaysChange(day)}
                 className="h-5 w-5 text-blue-600 rounded focus:ring-blue-500"
               />
-              <label htmlFor={day} className="ml-2 text-gray-700  text-lg">
+              <label htmlFor={day} className="ml-2 text-gray-700 md:text-lg">
                 {day}
               </label>
             </div>
@@ -178,15 +190,71 @@ const Home = () => {
       </div>
       <button
         onClick={handleSubmit}
-        className={`py-2 px-4 font-semibold rounded-lg self-center ${
-            year === null 
-            ? "bg-green-300 text-gray-500 cursor-not-allowed opacity-75" 
+        className={`py-2 px-4 md:text-lg font-semibold rounded-lg self-center ${
+          year === null ||
+          selectedCanton.length === 0 ||
+          Object.values(selectedDays).every((value) => value === false)
+            ? "bg-green-300 text-gray-500 cursor-not-allowed opacity-75"
             : "bg-green-600 hover:bg-green-700 text-white"
         }`}
-        disabled={year === null}
+        disabled={
+          year === null ||
+          selectedCanton.length === 0 ||
+          Object.values(selectedDays).every((value) => value === false)
+        }
       >
         Get holidays calendar
       </button>
+      <>
+        {allCantonHolidays.length > 0 && (
+          <div className="self-center">
+            <table className="bg-white border border-gray-200 shadow-md rounded-lg md:text-lg">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="py-3 px-1 md:px-4 text-left border-b">Day</th>
+                  <th className="py-3 px-1 md:px-4 text-left border-b">
+                    Month
+                  </th>
+                  <th className="py-3 px-1 md:px-4 text-left border-b">
+                    Holiday Name
+                  </th>
+                  <th className="py-3 px-1 md:px-4 text-left border-b">
+                    Match work day
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {allCantonHolidays.map((holiday, index) => (
+                  <tr
+                    key={index}
+                    className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+                  >
+                    <td className="py-3 px-1 md:px-4 border-b">
+                      {getDayOfMonth(holiday.startDate)}
+                    </td>
+                    <td className="py-3 px-1 md:px-4 border-b">
+                      {monthNames[Number(holiday.startDate.split("-")[1])]}
+                    </td>
+                    <td className="py-3 px-1 md:px-4 border-b">
+                      {holiday.name[0].text}
+                    </td>
+
+                    <td
+                      className={`py-3 px-1 md:px-4 border-b ${
+                        workDays.includes(getDayOfWeek(holiday.startDate))
+                          ? "font-bold text-orange-400 border-t"
+                          : ""
+                      }`}
+                    >
+                      {getDayOfWeek(holiday.startDate)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </>
     </>
   );
 };

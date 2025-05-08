@@ -1,0 +1,47 @@
+import { Canton } from "./types";
+
+export const cantons: Canton[] = [
+  { id: "AG", name: "Aargau" },
+  { id: "AI", name: "Appenzell Innerrhoden" },
+  { id: "AR", name: "Appenzell Ausserrhoden" },
+  { id: "BE", name: "Bern" },
+  { id: "BL", name: "Basel-Landschaft" },
+  { id: "BS", name: "Basel-Stadt" },
+  { id: "FR", name: "Fribourg" },
+  { id: "GE", name: "Geneva" },
+  { id: "GL", name: "Glarus" },
+  { id: "GR", name: "Graubünden" },
+  { id: "JU", name: "Jura" },
+  { id: "LU", name: "Lucerne" },
+  { id: "NE", name: "Neuchâtel" },
+  { id: "NW", name: "Nidwalden" },
+  { id: "OW", name: "Obwalden" },
+  { id: "SG", name: "St. Gallen" },
+  { id: "SH", name: "Schaffhausen" },
+  { id: "SO", name: "Solothurn" },
+  { id: "SZ", name: "Schwyz" },
+  { id: "TG", name: "Thurgau" },
+  { id: "TI", name: "Ticino" },
+  { id: "UR", name: "Uri" },
+  { id: "VD", name: "Vaud" },
+  { id: "VS", name: "Valais" },
+  { id: "ZG", name: "Zug" },
+  { id: "ZH", name: "Zurich" },
+];
+
+// Month names for display
+export const monthNames: string[] = [
+  "none",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
