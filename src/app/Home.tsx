@@ -1,10 +1,10 @@
 "use client";
 
-import HolidaysService from "@/api/holidays";
 import { useEffect, useMemo, useState } from "react";
 import { DaysOfWeek, Holiday } from "./types";
 import { cantons, monthNames } from "./const";
 import { getDayOfWeek, getDayOfMonth } from "./utils";
+import HolidaysService from "./api/holidays";
 
 const Home = () => {
   const CURRENT_YEAR = 2025;
@@ -109,6 +109,7 @@ const Home = () => {
 
   const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+    console.log('value', value)
     if (value === "" || /^\d+$/.test(value)) {
       setInputValue(value);
       validateYear(value);
@@ -123,6 +124,7 @@ const Home = () => {
   };
 
   const handleSubmit = async () => {
+    console.log('year', year)
     if (year !== null) {
       HolidaysService.getHolidays(year)
         .then((res) => {
@@ -141,12 +143,12 @@ const Home = () => {
         <div className="mb-8">
           {/* Select a Canton */}
           <label
-            data-testid="select-label"
             className="block text-gray-700 mb-2 text-xl font-bold "
           >
             Select a Canton:
           </label>
           <select
+            data-testid="select-label"
             value={selectedCanton}
             onChange={(e) => setSelectedCanton(e.target.value)}
             className="w-full md:text-lg p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -166,6 +168,7 @@ const Home = () => {
           {(Object.keys(selectedDays) as Array<keyof DaysOfWeek>).map((day) => (
             <div key={day} className="flex items-center">
               <input
+                data-testid={`check-id-${day}`}
                 type="checkbox"
                 id={day}
                 checked={selectedDays[day]}
@@ -188,6 +191,7 @@ const Home = () => {
             Enter a year ({CURRENT_YEAR}-{MAX_YEAR})
           </label>
           <input
+            data-testid="year-input"
             id="year-input"
             type="text"
             value={inputValue}
