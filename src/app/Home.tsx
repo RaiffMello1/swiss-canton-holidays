@@ -109,7 +109,6 @@ const Home = () => {
 
   const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    console.log('value', value)
     if (value === "" || /^\d+$/.test(value)) {
       setInputValue(value);
       validateYear(value);
@@ -124,7 +123,6 @@ const Home = () => {
   };
 
   const handleSubmit = async () => {
-    console.log('year', year)
     if (year !== null) {
       HolidaysService.getHolidays(year)
         .then((res) => {
